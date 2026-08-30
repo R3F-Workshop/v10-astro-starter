@@ -1,0 +1,51 @@
+---
+interface Props {
+  eyebrow: string
+  title: string
+  lede: string
+}
+
+const { eyebrow, title, lede } = Astro.props
+---
+
+{/* The scene is still rendering behind this, so the panel is frosted rather
+    than opaque — that is the whole point of the persist mode */}
+<article
+  class="mx-auto my-12 w-full max-w-3xl rounded-2xl border border-white/10 bg-black/60 px-8 py-12 backdrop-blur-xl"
+>
+  <p class="font-mono text-xs tracking-widest text-violet-400 uppercase">{eyebrow}</p>
+  <h1 class="mt-3 text-3xl font-semibold tracking-tight text-zinc-50">{title}</h1>
+  <p class="mt-4 text-zinc-400">{lede}</p>
+  <div class="mt-10 flex flex-col gap-8">
+    <slot />
+  </div>
+</article>
+
+<style is:global>
+  .prose-section h2 {
+    font-family: var(--font-mono);
+    font-size: 0.875rem;
+    color: var(--color-zinc-300);
+  }
+  .prose-section p {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--color-zinc-400);
+  }
+  .prose-section code {
+    border-radius: 0.25rem;
+    background: rgb(255 255 255 / 0.06);
+    padding: 0.1rem 0.35rem;
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-zinc-200);
+  }
+  .prose-section a {
+    color: var(--color-violet-400);
+    text-underline-offset: 4px;
+  }
+  .prose-section a:hover {
+    text-decoration: underline;
+  }
+</style>

@@ -1,0 +1,65 @@
+---
+import Base from '../layouts/Base.astro'
+import PageShell from '../components/site/PageShell.astro'
+---
+
+<Base title="About · R3F v10 Astro Starter">
+  <PageShell
+    eyebrow="about"
+    title="One canvas, every route"
+    lede="The same scene as the Vite and Next starters. What Astro adds is that the canvas can outlive the page it started on — and that everything around it ships no JavaScript at all."
+  >
+    <section class="prose-section">
+      <h2>client:only="react"</h2>
+      <p>
+        The canvas has no meaningful server render, and <code>three/webgpu</code> reaches for browser
+        globals at import time — so the island is <code>client:only</code>, not
+        <code>client:load</code>. Astro never tries to prerender it; the placeholder is empty markup
+        until React hydrates on the client.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>transition:persist</h2>
+      <p>
+        Mounted in <code>Base.astro</code> with <code>transition:persist</code>, the island's DOM
+        node is moved into the next page rather than recreated. Hover state, click accents, camera
+        position and the Leva panel all survive navigation. It needs
+        <code>&lt;ClientRouter /&gt;</code> in the head — that is the whole setup. The Next port
+        needs <code>tunnel-rat</code> and a canvas hoisted into the root layout for the same effect.
+      </p>
+      <p>
+        Not every site wants that. <code>src/config.ts</code> has a
+        <code>CANVAS_MODE</code> switch: flip it to <code>'home-fixed'</code> and the canvas is
+        mounted by <code>index.astro</code> instead, with no <code>transition:persist</code> — so
+        leaving <code>/</code> unmounts it and disposes the renderer. Both paths are wired up; the
+        diff between them is two lines.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>Zero-JS everywhere else</h2>
+      <p>
+        The nav is a plain <code>.astro</code> component and gets its active state from
+        <code>Astro.url.pathname</code> at build time — no client component, no
+        <code>usePathname</code>. The footer is a React component rendered <em>without</em> a client
+        directive, so Astro compiles it to static HTML and ships none of its JavaScript. React is
+        loaded for exactly one thing on this site: the canvas.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>Sizing</h2>
+      <p>
+        R3F's own container is <code>width: 100%; height: 100%</code>, so it needs a sized parent. As
+        a bare child of <code>&lt;body&gt;</code> it collapses to zero height and the renderer never
+        boots — with no error. The fixed wrapper lives inside
+        <code>Experience.tsx</code> so it travels with the island when Astro moves it.
+      </p>
+      <p>
+        Read the <a href="/notes">notes</a> for the alpha rough edges, or go back to
+        <a href="/">the scene</a>.
+      </p>
+    </section>
+  </PageShell>
+</Base>

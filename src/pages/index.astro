@@ -1,0 +1,19 @@
+---
+import Base from '../layouts/Base.astro'
+import Experience from '../components/Experience'
+import { Footer } from '../components/overlay/Footer'
+import { CANVAS_MODE } from '../config'
+---
+
+<Base passthrough>
+  {
+    /* In 'home-fixed' mode the canvas belongs to this page: no
+       transition:persist, so navigating away unmounts it and disposes the
+       renderer. Same island, different owner. */
+    CANVAS_MODE === 'home-fixed' && <Experience client:only="react" />
+  }
+
+  {/* No client directive — Astro renders this React component to static HTML
+      and ships zero JS for it */}
+  <Footer />
+</Base>

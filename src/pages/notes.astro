@@ -1,0 +1,102 @@
+---
+import Base from '../layouts/Base.astro'
+import PageShell from '../components/site/PageShell.astro'
+---
+
+<Base title="Notes · R3F v10 Astro Starter">
+  <PageShell
+    eyebrow="notes"
+    title="Alpha rough edges"
+    lede="Everything here cost us time at least once. Both alphas move fast, so check the dates on anything you read elsewhere."
+  >
+    <section class="prose-section">
+      <h2>You must pass renderer to &lt;Canvas&gt;</h2>
+      <p>
+        The bare flag or a config object — either gets you the new <code>WebGPURenderer</code>, which
+        the TSL node materials in this scene require. Without it the alpha quietly builds the legacy
+        <code>WebGLRenderer</code> and node materials take it down with a cryptic
+        <code>Cannot read properties of undefined (reading 'replace')</code> from inside shader
+        compilation. You still have to start on the new renderer even where WebGPU is missing: the
+        WebGL2 fallback is automatic and TSL handles the switch, but only if
+        <code>renderer</code> put you on that path in the first place. Pass
+        <code>gl={'{{ antialias: true }}'}</code> instead when you want the legacy renderer on
+        purpose.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>The TSL hooks live on a separate entry</h2>
+      <p>
+        <code>useUniforms</code> and <code>useLocalNodes</code> come from
+        <code>@react-three/fiber/webgpu</code>, not the main entry. The two share a React context
+        through <code>globalThis</code>, so the hooks work inside the regular
+        <code>&lt;Canvas&gt;</code> next to drei.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>useLocalNodes has the creator in its dep array</h2>
+      <p>
+        It is a <code>useMemo</code> keyed on the store's uniforms, nodes and textures plus the HMR
+        version — which is the point, since the node graph then rebuilds when you edit the shader.
+        But an inline arrow is a new identity every render, so wrap the creator in
+        <code>useCallback</code> or the graph rebuilds on every render.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>Uniforms read back out of the store need a cast</h2>
+      <p>
+        They come back typed <code>UniformNode&lt;unknown&gt;</code>, which three's TSL operators
+        reject. Launder it in one place rather than at every call site.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>useFrame state has no clock</h2>
+      <p>
+        The scheduler moved out into <code>@pmndrs/scheduler</code> and timing sits directly on the
+        state: <code>state.elapsed</code>, <code>state.delta</code>, <code>state.frame</code>,
+        <code>state.time</code>. v10 also renames <code>state.gl</code> to
+        <code>state.renderer</code>.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>drei v11 alpha ships a trimmed export set</h2>
+      <p>
+        <code>CameraControls</code>, <code>Grid</code> and <code>ContactShadows</code> have not landed
+        yet — this starter uses <code>OrbitControls</code> (which has <code>autoRotate</code> built
+        in) and three's <code>gridHelper</code> instead.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>Leva loses its styles across a view transition</h2>
+      <p>
+        Astro-specific, and it looks like the panel exploded. Leva styles itself with stitches, which
+        injects rules straight into the CSSOM via <code>insertRule</code> — the
+        <code>&lt;style&gt;</code> tags it creates have no text content. The router swaps
+        <code>&lt;head&gt;</code> wholesale on navigation, so those nodes are dropped and the
+        persisted panel comes back with no CSS at all.
+      </p>
+      <p>
+        The fix is in <code>Base.astro</code>: on <code>astro:before-swap</code>, tag every
+        runtime-injected style with a <code>data-astro-transition-persist</code> id and add a
+        matching placeholder to the incoming document. That is what makes Astro keep the live node —
+        rules and all — instead of replacing it. Anything else that injects styles at runtime needs
+        the same treatment.
+      </p>
+    </section>
+
+    <section class="prose-section">
+      <h2>A zero-height parent boots nothing</h2>
+      <p>
+        Astro-specific in practice: drop the island straight into <code>&lt;body&gt;</code> and R3F's
+        100%-of-nothing container collapses. You get a blank page and no error. Give the wrapper a
+        real size — here <code>fixed inset-0</code>, inside the component so it moves with the island.
+      </p>
+      <p>Background on the port is in <a href="/about">/about</a>.</p>
+    </section>
+  </PageShell>
+</Base>

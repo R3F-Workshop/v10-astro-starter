@@ -1,0 +1,74 @@
+---
+import { ClientRouter } from 'astro:transitions'
+import Nav from '../components/site/Nav.astro'
+import Experience from '../components/Experience'
+import { CANVAS_MODE } from '../config'
+import '../styles/global.css'
+
+interface Props {
+  title?: string
+  description?: string
+  /** Let clicks through to the canvas behind the page content (home does) */
+  passthrough?: boolean
+}
+
+const {
+  title = 'R3F v10 Astro Starter',
+  description = 'react-three-fiber v10 alpha in Astro, with a canvas that survives navigation',
+  passthrough = false,
+} = Astro.props
+---
+
+<!doctype html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0a0a" />
+    <link rel="icon" type="image/svg+xml" href="/pmndrs.svg" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    {/* transition:persist only works with the view transitions router */}
+    <ClientRouter />
+
+    <script is:inline>
+      // Leva styles itself with stitches, which injects rules straight into the
+      // CSSOM via insertRule — the <style> tags it creates have no text content.
+      // The router swaps <head> wholesale on navigation, so those nodes are
+      // dropped and the persisted panel comes back with no CSS at all.
+      //
+      // Tag each runtime-injected style with a persist id and put a matching
+      // placeholder in the incoming document, which is what makes Astro keep the
+      // live node (rules and all) instead of replacing it.
+      document.addEventListener('astro:before-swap', (event) => {
+        document.head.querySelectorAll('style').forEach((style, index) => {
+          // Astro's own styles carry their CSS as text; runtime-injected ones do not
+          if (style.textContent?.trim() || !style.sheet?.cssRules.length) return
+
+          style.dataset.astroTransitionPersist ??= `runtime-style-${index}`
+
+          const placeholder = event.newDocument.createElement('style')
+          placeholder.dataset.astroTransitionPersist = style.dataset.astroTransitionPersist
+          event.newDocument.head.appendChild(placeholder)
+        })
+      })
+    </script>
+  </head>
+
+  <body class="min-h-full">
+    {
+      /* client:only — a WebGPU canvas has no meaningful server render, and
+         three/webgpu reaches for browser globals at import time. transition:persist
+         is what keeps the scene alive across navigations: Astro moves this island's
+         DOM node into the new page instead of remounting it. */
+      CANVAS_MODE === 'persist' && <Experience client:only="react" transition:persist />
+    }
+
+    <div class="relative z-10 flex min-h-dvh flex-col">
+      <Nav />
+      <main class:list={['flex min-h-0 flex-1 flex-col', passthrough && 'pointer-events-none']}>
+        <slot />
+      </main>
+    </div>
+  </body>
+</html>
